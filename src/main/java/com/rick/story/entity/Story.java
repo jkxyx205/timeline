@@ -25,4 +25,6 @@ public class Story {
     private List<StoryPic> storyPicList;
 
     private List<StoryTag> storyTagList;
+
+    private List<StoryComment> storyCommentList;
 }

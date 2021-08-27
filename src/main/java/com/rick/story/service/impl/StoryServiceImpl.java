@@ -3,13 +3,11 @@ package com.rick.story.service.impl;
 import com.rick.common.dao.BaseDAO;
 import com.rick.oss.client.OssStoryPicClient;
 import com.rick.oss.model.ImageObject;
+import com.rick.story.dao.StoryCommentDAO;
 import com.rick.story.dao.StoryPicDAO;
 import com.rick.story.dao.StoryTagDAO;
 import com.rick.story.dao.TagDAO;
-import com.rick.story.entity.Story;
-import com.rick.story.entity.StoryPic;
-import com.rick.story.entity.StoryTag;
-import com.rick.story.entity.Tag;
+import com.rick.story.entity.*;
 import com.rick.story.service.StoryService;
 import com.rick.story.service.bo.StoryBO;
 import com.rick.util.DefaultDataUtils;
@@ -45,11 +43,15 @@ public class StoryServiceImpl implements StoryService {
 
     private final StoryTagDAO storyTagDAO;
 
+    private final StoryCommentDAO storyCommentDAO;
+
     private final TagDAO tagDAO;
 
     private final OssStoryPicClient ossStoryPicClient;
 
     private final static String PAGE_SQL = "SELECT id, text, create_time, addr FROM story WHERE id < ? ORDER BY id DESC";
+
+    private final static String UPDATE_ADDR_SQL = "UPDATE story SET addr = ? WHERE id = ?";
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -91,8 +93,8 @@ public class StoryServiceImpl implements StoryService {
 
         ossStoryPicClient.deleteFiles(storyPicDAO.selectByStoryId(id).stream().map(StoryPic::getUrl).collect(toList()));
         storyPicDAO.deleteByStoryId(id);
-
         storyTagDAO.deleteByStoryId(id);
+        storyCommentDAO.deleteByStoryId(id);
     }
 
     @Override
@@ -100,6 +102,7 @@ public class StoryServiceImpl implements StoryService {
         Story story = storyDAO.selectById(id);
         story.setStoryPicList(storyPicDAO.selectByStoryId(id));
         story.setStoryTagList(storyTagDAO.selectByStoryId(id));
+        story.setStoryCommentList(storyCommentDAO.selectByStoryId(id));
         return story;
     }
 
@@ -120,6 +123,7 @@ public class StoryServiceImpl implements StoryService {
 
         List<StoryPic> storyPics = storyPicDAO.selectByStoryIds(storyIds);
         List<StoryTag> storyTags = storyTagDAO.selectByStoryIds(storyIds);
+        List<StoryComment> storyComments = storyCommentDAO.selectByStoryIds(storyIds);
 
         Map<Long, List<StoryPic>> picMap = storyPics.stream()
                 .collect(groupingBy(StoryPic::getStoryId, toList()));
@@ -127,9 +131,13 @@ public class StoryServiceImpl implements StoryService {
         Map<Long, List<StoryTag>> tagMap = storyTags.stream()
                 .collect(groupingBy(StoryTag::getStoryId, toList()));
 
+        Map<Long, List<StoryComment>> commentMap = storyComments.stream()
+                .collect(groupingBy(StoryComment::getStoryId, toList()));
+
         for (Story story : storyList) {
             story.setStoryPicList(DefaultDataUtils.defaultEmptyList(picMap.get(story.getId())));
             story.setStoryTagList(DefaultDataUtils.defaultEmptyList(tagMap.get(story.getId())));
+            story.setStoryCommentList(DefaultDataUtils.defaultEmptyList(commentMap.get(story.getId())));
         }
 
         return storyList;
@@ -138,5 +146,33 @@ public class StoryServiceImpl implements StoryService {
     @Override
     public List<Tag> listTags() {
         return tagDAO.selectAll();
+    }
+
+    @Override
+    public long addComment(Long id, String text) {
+       if (isTagComment(text)) {
+           long tagId = storyTagDAO.insert(new StoryTag(text.replace("#", ""), id));
+           return -tagId;
+       }
+
+       if (isAddressComment(text)) {
+           jdbcTemplate.update(UPDATE_ADDR_SQL, text.replace("#", ""), id);
+           return 0;
+       }
+
+       return storyCommentDAO.insert(new StoryComment(text, id));
+    }
+
+    @Override
+    public void deleteComment(Long id) {
+        storyCommentDAO.deleteById(id);
+    }
+
+    private boolean isAddressComment(String text) {
+        return text.startsWith("#") && !text.endsWith("#");
+    }
+
+    private boolean isTagComment(String text) {
+        return text.startsWith("#") && text.endsWith("#");
     }
 }

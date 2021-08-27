@@ -51,4 +51,17 @@ public interface StoryService {
      * @return
      */
     List<Tag> listTags();
+
+    /**
+     * 添加评论
+     * @param id
+     * @param comment
+     */
+     long addComment(Long id, String comment);
+
+    /**
+     * 删除评论
+     * @param id
+     */
+    void deleteComment(Long id);
 }

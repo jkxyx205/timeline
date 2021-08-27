@@ -12,19 +12,19 @@ import java.time.Instant;
  */
 @Data
 @NoArgsConstructor
-public class StoryTag {
+public class StoryComment {
 
     private Long id;
 
-    private String title;
+    private String text;
 
     private Long storyId;
 
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private Instant createTime;
 
-    public StoryTag(String title, Long storyId) {
-        this.title = title;
+    public StoryComment(String text, Long storyId) {
+        this.text = text;
         this.storyId = storyId;
     }
 }

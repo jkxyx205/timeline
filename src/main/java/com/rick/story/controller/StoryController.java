@@ -3,9 +3,9 @@ package com.rick.story.controller;
 import com.rick.common.model.Result;
 import com.rick.oss.model.ImageObject;
 import com.rick.story.entity.Story;
+import com.rick.story.entity.StoryComment;
 import com.rick.story.service.StoryService;
 import com.rick.story.service.bo.StoryBO;
-import com.rick.util.WebAPI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -57,7 +57,18 @@ public class StoryController {
     }
 
     @GetMapping("tags")
-    public Result<Story> listTags(@RequestParam(defaultValue = "0") long offsetStoryId) {
+    public Result<Story> listTags() {
         return Result.success(storyService.listTags());
+    }
+
+    @PostMapping("comments/{id}")
+    public Result<StoryComment> addComment(@PathVariable Long id, @RequestBody StoryComment storyComment) {
+        return Result.success(storyService.addComment(id, storyComment.getText()));
+    }
+
+    @DeleteMapping("comments/{id}")
+    public Result deleteComment(@PathVariable Long id) {
+        storyService.deleteComment(id);
+        return Result.success();
     }
 }
