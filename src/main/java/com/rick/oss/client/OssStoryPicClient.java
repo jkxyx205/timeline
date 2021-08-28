@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +30,8 @@ public class OssStoryPicClient implements InitializingBean {
 
     private OSS ossClient;
 
+    private static final DateTimeFormatter dtm = DateTimeFormatter.ofPattern("yyyy-MM");
+
     /**
      * 上传文件
      * @param storyId
@@ -41,15 +45,18 @@ public class OssStoryPicClient implements InitializingBean {
 
         List<String> storyPicList = new ArrayList<>();
         int size = imageObjectList.size();
+        String folderName = dtm.format(LocalDateTime.now());
+
         for (int i = 0; i < size; i++) {
             ImageObject imageObject = imageObjectList.get(i);
-
             String name = storyId + "-" + i + "." + imageObject.getExt();
+            String path = folderName + "/" + name;
+
             ossClient.putObject(ossConfig.getBucketName(),
-                    name,
+                    path,
                     imageObject.getIs());
 
-            storyPicList.add("https://" + ossConfig.getBucketName() + ".oss-cn-shanghai.aliyuncs.com/" + name);
+            storyPicList.add("https://" + ossConfig.getBucketName() + ".oss-cn-shanghai.aliyuncs.com/" + path);
         }
 
         return storyPicList;
