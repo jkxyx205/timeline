@@ -1,12 +1,8 @@
 package com.rick.story.service.impl;
 
-import com.rick.common.dao.BaseDAO;
 import com.rick.oss.client.OssStoryPicClient;
 import com.rick.oss.model.ImageObject;
-import com.rick.story.dao.StoryCommentDAO;
-import com.rick.story.dao.StoryPicDAO;
-import com.rick.story.dao.StoryTagDAO;
-import com.rick.story.dao.TagDAO;
+import com.rick.story.dao.*;
 import com.rick.story.entity.*;
 import com.rick.story.service.StoryService;
 import com.rick.story.service.bo.StoryBO;
@@ -37,7 +33,7 @@ public class StoryServiceImpl implements StoryService {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final BaseDAO<Story> storyDAO;
+    private final StoryDAO storyDAO;
 
     private final StoryPicDAO storyPicDAO;
 
@@ -49,7 +45,7 @@ public class StoryServiceImpl implements StoryService {
 
     private final OssStoryPicClient ossStoryPicClient;
 
-    private final static String PAGE_SQL = "SELECT id, text, create_time, addr FROM story WHERE id < ? ORDER BY id DESC";
+    private final static String PAGE_SQL = "SELECT id, text, create_time, addr, star FROM story WHERE id < ? ORDER BY id DESC";
 
     private final static String UPDATE_ADDR_SQL = "UPDATE story SET addr = ? WHERE id = ?";
 
@@ -115,32 +111,15 @@ public class StoryServiceImpl implements StoryService {
     public List<Story> listStory(long offsetStoryId, String sqlCondition) {
         offsetStoryId = (offsetStoryId == 0 ? Long.MAX_VALUE : offsetStoryId);
         List<Story> storyList = SQLUtils.selectList(jdbcTemplate, Story.class, PAGE_SQL + " LIMIT 0, 10", offsetStoryId);
-        if (CollectionUtils.isEmpty(storyList)) {
-            return storyList;
-        }
-
-        Collection<Long> storyIds = storyList.stream().map(story -> story.getId()).collect(toList());
-
-        List<StoryPic> storyPics = storyPicDAO.selectByStoryIds(storyIds);
-        List<StoryTag> storyTags = storyTagDAO.selectByStoryIds(storyIds);
-        List<StoryComment> storyComments = storyCommentDAO.selectByStoryIds(storyIds);
-
-        Map<Long, List<StoryPic>> picMap = storyPics.stream()
-                .collect(groupingBy(StoryPic::getStoryId, toList()));
-
-        Map<Long, List<StoryTag>> tagMap = storyTags.stream()
-                .collect(groupingBy(StoryTag::getStoryId, toList()));
-
-        Map<Long, List<StoryComment>> commentMap = storyComments.stream()
-                .collect(groupingBy(StoryComment::getStoryId, toList()));
-
-        for (Story story : storyList) {
-            story.setStoryPicList(DefaultDataUtils.defaultEmptyList(picMap.get(story.getId())));
-            story.setStoryTagList(DefaultDataUtils.defaultEmptyList(tagMap.get(story.getId())));
-            story.setStoryCommentList(DefaultDataUtils.defaultEmptyList(commentMap.get(story.getId())));
-        }
-
+        queryDetail(storyList);
         return storyList;
+    }
+
+    @Override
+    public List<Story> listStarStory() {
+        List<Story> stories = storyDAO.selectStarStory();
+        queryDetail(stories);
+        return stories;
     }
 
     @Override
@@ -174,5 +153,34 @@ public class StoryServiceImpl implements StoryService {
 
     private boolean isTagComment(String text) {
         return text.startsWith("#") && text.endsWith("#");
+    }
+
+    private List<Story> queryDetail(List<Story> storyList) {
+        if (CollectionUtils.isEmpty(storyList)) {
+            return storyList;
+        }
+
+        Collection<Long> storyIds = storyList.stream().map(story -> story.getId()).collect(toList());
+
+        List<StoryPic> storyPics = storyPicDAO.selectByStoryIds(storyIds);
+        List<StoryTag> storyTags = storyTagDAO.selectByStoryIds(storyIds);
+        List<StoryComment> storyComments = storyCommentDAO.selectByStoryIds(storyIds);
+
+        Map<Long, List<StoryPic>> picMap = storyPics.stream()
+                .collect(groupingBy(StoryPic::getStoryId, toList()));
+
+        Map<Long, List<StoryTag>> tagMap = storyTags.stream()
+                .collect(groupingBy(StoryTag::getStoryId, toList()));
+
+        Map<Long, List<StoryComment>> commentMap = storyComments.stream()
+                .collect(groupingBy(StoryComment::getStoryId, toList()));
+
+        for (Story story : storyList) {
+            story.setStoryPicList(DefaultDataUtils.defaultEmptyList(picMap.get(story.getId())));
+            story.setStoryTagList(DefaultDataUtils.defaultEmptyList(tagMap.get(story.getId())));
+            story.setStoryCommentList(DefaultDataUtils.defaultEmptyList(commentMap.get(story.getId())));
+        }
+
+        return storyList;
     }
 }

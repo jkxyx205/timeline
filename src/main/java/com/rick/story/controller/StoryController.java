@@ -56,6 +56,11 @@ public class StoryController {
         return Result.success(storyService.listStory(offsetStoryId, null));
     }
 
+    @GetMapping("stars")
+    public Result<Story> star() {
+        return Result.success(storyService.listStarStory());
+    }
+
     @GetMapping("tags")
     public Result<Story> listTags() {
         return Result.success(storyService.listTags());

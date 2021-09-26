@@ -27,4 +27,6 @@ public class Story {
     private List<StoryTag> storyTagList;
 
     private List<StoryComment> storyCommentList;
+
+    private Boolean star;
 }

@@ -47,6 +47,12 @@ public interface StoryService {
     List<Story> listStory(long offsetStoryId, String sqlCondition);
 
     /**
+     * 获取置顶的story
+     * @return
+     */
+    List<Story> listStarStory();
+
+    /**
      * 根据可以Tags
      * @return
      */

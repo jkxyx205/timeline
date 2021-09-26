@@ -1,6 +1,6 @@
 package com.rick.story.dao.impl;
 
-import com.rick.common.dao.BaseDAO;
+import com.rick.story.dao.StoryDAO;
 import com.rick.story.entity.Story;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Repository
 @RequiredArgsConstructor
-public class StoryDAOImpl implements BaseDAO<Story> {
+public class StoryDAOImpl implements StoryDAO {
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -29,6 +29,8 @@ public class StoryDAOImpl implements BaseDAO<Story> {
     private final static String DELETE_SQL = "DELETE FROM story WHERE id = ?";
 
     private final static String SELECT_SQL = "SELECT id, text, create_time, addr FROM story WHERE id = ?";
+
+    private final static String SELECT_START_SQL = "SELECT id, text, create_time, addr, star FROM story WHERE star = 1";
 
     @Override
     public long insert(Story story) {
@@ -67,4 +69,8 @@ public class StoryDAOImpl implements BaseDAO<Story> {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public List<Story> selectStarStory() {
+        return jdbcTemplate.query(SELECT_START_SQL, new BeanPropertyRowMapper<>(Story.class));
+    }
 }
