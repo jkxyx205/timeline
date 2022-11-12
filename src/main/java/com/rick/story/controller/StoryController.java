@@ -52,8 +52,8 @@ public class StoryController {
     }
 
     @GetMapping
-    public Result<Story> list(@RequestParam(defaultValue = "0") long offsetStoryId) {
-        return Result.success(storyService.listStory(offsetStoryId, null));
+    public Result<Story> list(@RequestParam(defaultValue = "0") long offsetStoryId, String keyword) {
+        return Result.success(storyService.listStory(offsetStoryId, keyword));
     }
 
     @GetMapping("stars")

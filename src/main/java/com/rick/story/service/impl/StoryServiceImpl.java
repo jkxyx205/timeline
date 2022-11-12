@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,6 +47,13 @@ public class StoryServiceImpl implements StoryService {
     private final OssStoryPicClient ossStoryPicClient;
 
     private final static String PAGE_SQL = "SELECT id, text, create_time, addr, star FROM story WHERE id < ? ORDER BY id DESC";
+
+    private final static String PAGE_KEYWORD_SQL = "SELECT s.id, s.text, s.create_time, s.addr, s.star\n" +
+            "FROM story s\n" +
+            "WHERE s.id < ?\n" +
+            "  AND (s.text LIKE CONCAT('%', ?, '%') OR EXISTS(SELECT 1 FROM story_comment sc WHERE s.id = sc.story_id AND sc.text LIKE CONCAT('%', ?, '%')) OR\n" +
+            "       EXISTS(SELECT 1 FROM story_tag st WHERE s.id = st.story_id AND st.title LIKE CONCAT('%', ?, '%')))\n" +
+            "ORDER BY s.id DESC";
 
     private final static String UPDATE_ADDR_SQL = "UPDATE story SET addr = ? WHERE id = ?";
 
@@ -108,9 +116,15 @@ public class StoryServiceImpl implements StoryService {
     }
 
     @Override
-    public List<Story> listStory(long offsetStoryId, String sqlCondition) {
+    public List<Story> listStory(long offsetStoryId, String keyword) {
         offsetStoryId = (offsetStoryId == 0 ? Long.MAX_VALUE : offsetStoryId);
-        List<Story> storyList = SQLUtils.selectList(jdbcTemplate, Story.class, PAGE_SQL + " LIMIT 0, 10", offsetStoryId);
+        List<Story> storyList;
+        if (StringUtils.hasText(keyword)) {
+            storyList = SQLUtils.selectList(jdbcTemplate, Story.class, PAGE_KEYWORD_SQL + " LIMIT 0, 10", offsetStoryId, keyword, keyword, keyword);
+        } else {
+            storyList = SQLUtils.selectList(jdbcTemplate, Story.class, PAGE_SQL + " LIMIT 0, 10", offsetStoryId);
+        }
+
         queryDetail(storyList);
         return storyList;
     }
