@@ -8,7 +8,6 @@ import com.rick.story.service.StoryService;
 import com.rick.story.service.bo.StoryBO;
 import com.rick.util.DefaultDataUtils;
 import com.rick.util.SQLUtils;
-import com.rick.util.WebAPI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -62,7 +61,7 @@ public class StoryServiceImpl implements StoryService {
     public Story post(StoryBO storyBO, List<ImageObject> imageObjectList) {
         Story story = new Story();
         story.setText(storyBO.getText());
-        story.setAddr(WebAPI.reverseGeocoding(storyBO.getLat(), storyBO.getLng()));
+//        story.setAddr(WebAPI.reverseGeocoding(storyBO.getLat(), storyBO.getLng()));
         long storyId = storyDAO.insert(story);
         List<String> picUrlList = ossStoryPicClient.upload(storyId, imageObjectList);
 

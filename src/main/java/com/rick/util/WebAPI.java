@@ -31,9 +31,9 @@ public final class WebAPI {
         String url = "https://api.map.baidu.com/reverse_geocoding/v3/?ak=cctNvXcciKZDZd4MAILYvXKLG35XPo3X&output=json&coordtype=wgs84ll&location=" + lat + "," + lng;
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet httpget = new HttpGet(url);
+        HttpGet httpGet = new HttpGet(url);
         try {
-            HttpResponse httpresponse = httpclient.execute(httpget);
+            HttpResponse httpresponse = httpclient.execute(httpGet);
             String json = IOUtils.readStreamAsString(httpresponse.getEntity().getContent(), "utf-8");
             return resolveJsonValue(json, "formatted_address");
         } catch (IOException e) {}
