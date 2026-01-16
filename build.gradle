@@ -12,6 +12,7 @@ group 'com.rick'
 version '1.0-SNAPSHOT'
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -28,6 +29,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.49'
+
+    // 引用 notification ，并排除依赖
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.17.0'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.4.1'
+    implementation (group: 'com.rick.notification', name: 'sharp-notification', version: '3.0-SNAPSHOT') {
+        exclude group: 'com.rick.common', module: 'sharp-common'
+    }
 
     // OSS
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
